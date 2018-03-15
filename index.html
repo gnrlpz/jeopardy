@@ -1,19 +1,26 @@
 <!DOCTYPE html>
-
+<!-- note: only tested against Firefox 59 -->
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial- scale=1.0">
     <title>Jeopardy!</title>
+    <link href="https://fonts.googleapis.com/css?family=Lily+Script+One|Nunito|Passion+One" rel="stylesheet">
     <style type="text/css">
-    	body {
-    		background-color: grey;
-    		font-family: "Impact", sans-serif;
-    		margin: 40px;
+    	header {
+    		color: #f87060;
+    		font-family: 'Lily Script One', cursive;
     	}
 
-    	.board {
-    		max-width: 1000px;
+    	body {
+    		background-color: #022b3a;
+    		font-family: 'Passion One', sans-serif;
+    		margin: 40px;
+    		text-align: center;
+    	}
+
+    	#board {
+    		max-width: 1500px;
 			margin: 0 auto;
 			display: grid;
 			grid-gap: 10px;
@@ -23,61 +30,105 @@
 
     	.box {
     		display: table-cell;
-    		background-color: blue;
-    		color: orange;
+    		background-color: #1f7a8c;
+    		color: #e1e5f2;
     		border-radius: 5px;
     		padding: 20px;
     		font-size: 150%;
-    		text-align: center;
+    		vertical-align: middle;
+    		word-wrap: break-word;
+    		cursor: pointer;
     	}
 
     	.cat {
     		margin-bottom: 10px;
-    		color: white;
+    		background-color: #3d5a80;
+    		text-transform: uppercase;
+    		cursor: default;
     	}
+
+    	/* Modal Background*/
+    	.modal {
+    		display: none; /* Hidden by default */
+    		position: fixed; /* Stay in place */
+    		z-index: 1; /* Sit on top */
+    		left: 0;
+    		top: 0;
+    		width: 100%; /* Full width */
+    		height: 100%; /* Full height */
+    		overflow: auto; /* Enable scroll if needed */
+    		background-color: rgb(0,0,0); /* Fallback color */
+    		background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    	}
+
+    	/* Modal Content/Box */
+		.modal-content {
+		    background-color: #1f7a8c;
+		    border-radius: 5px;
+		    color: #e1e5f2;
+		    margin: 15% auto; /* 15% from the top and centered */
+		    padding: 20px;
+		    width: 50%; /* Could be more or less, depending on screen size */
+		    font-family: 'Nunito', sans-serif;
+		    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    		animation-name: animatetop;
+    		animation-duration: 0.4s;
+		}
+
+		.modal-header {
+		    padding: 2px 16px;
+		}
+
+		.modal-body {
+			padding: 2px 16px;
+		}
+
+		.modal-footer {
+		    padding: 2px 16px;
+		    color: #f87060;
+    		font-family: 'Lily Script One', cursive;
+		}
+
+		.close {
+		    color: #aaa;
+		    float: right;
+		    font-size: 28px;
+		    font-weight: bold;
+		}
+
+		.close:hover,
+		.close:focus {
+		    color: black;
+		    text-decoration: none;
+		    cursor: pointer;
+		}
+
+		/* Add Animation */
+		@keyframes animatetop {
+		    from {top: -300px; opacity: 0}
+		    to {top: 0; opacity: 1}
+		}
 	</style>
   </head>
   <body>
-	<div class="board">
-<!--   		<div class="box cat">A</div>
-  		<div class="box cat">B</div>
-  		<div class="box cat">C</div>
-  		<div class="box cat">D</div>
-  		<div class="box cat">E</div>
-
-  		<div class="box item">A1</div>
-  		<div class="box item">A2</div>
-  		<div class="box item">A3</div>
-  		<div class="box item">A4</div>
-  		<div class="box item">A5</div>
-
-  		<div class="box item">A1</div>
-  		<div class="box item">A2</div>
-  		<div class="box item">A3</div>
-  		<div class="box item">A4</div>
-  		<div class="box item">A5</div>
-
-  		<div class="box item">A1</div>
-  		<div class="box item">A2</div>
-  		<div class="box item">A3</div>
-  		<div class="box item">A4</div>
-  		<div class="box item">A5</div>
-
-  		<div class="box item">A1</div>
-  		<div class="box item">A2</div>
-  		<div class="box item">A3</div>
-  		<div class="box item">A4</div>
-  		<div class="box item">A5</div>
-
-  		<div class="box item">A1</div>
-  		<div class="box item">A2</div>
-  		<div class="box item">A3</div>
-  		<div class="box item">A4</div>
-  		<div class="box item">A5</div> -->
+  	<header>
+  		<h1>Jeopardy!</h1>
+  	</header>
+	<div id="board">
+  	</div>
+  	<div id="answerModal" class="modal">
+  		<div class="modal-content">
+  			<div class="modal-header">
+  				<span class="close">&times;</span>
+  			</div>
+  			<div class="modal-body"></div>
+  			<div class="modal-footer">
+  				<h3>Jeopardy!</h3>
+  			</div>
+  		</div>
   	</div>
   	<script type="text/javascript">
   		const apiurl = 'http://jservice.io/api/categories?count=5&offset=10'
-  		console.log(apiurl)
   		var cats = []
 
   		function getData(URL) {
@@ -104,17 +155,59 @@
 
   		getData(apiurl)
   		.then(res => {
-  			cats = JSON.parse(res)
-  			console.log(cats)
+  			cats = JSON.parse(res) // add categories from api to array cats
   			let caturls = []
   			for(let i = 0; i < 5; i++) {
   				caturls.push('http://jservice.io/api/category?id='+ cats[i].id)
   			}
 
   			for(let i = 0; i < 5; i++) {
+  				// store Promise objects of the hint/question data to hintdata
   				hintdata.push(getData(caturls[i]))
   			}
-  			console.log(hintdata)
+  		})
+  		.then(res => {
+  			Promise.all(hintdata).then(res => {
+  				hintdata = res
+  				for (let i = 0; i < 5; i++) {
+  					hintdata[i] = JSON.parse(hintdata[i]) // convert hintdata to plain JSON from Promises
+					// adding category headers to the HTML
+  					var divcat = document.createElement('div')
+  					divcat.innerHTML = hintdata[i].title
+  					document.getElementById('board').appendChild(divcat)
+  					divcat.classList.add('box')
+  					divcat.classList.add('cat')
+  				}
+  				for (let i = 0; i < 5; i++) {
+  					for (let j = 0; j < 5; j++) {
+  						var divitem = document.createElement('div')
+  						divitem.innerHTML = '$' + hintdata[j].clues[i].value
+  						divitem.classList.add('box')
+  						// event handling
+  						divitem.onclick = function() {
+  							var modal = document.getElementById('answerModal')
+  							modal.style.display = "block" // shows the modal
+  							// following builds the modal
+  							document.querySelector('.modal-body').innerHTML = "<h2>" + hintdata[j].clues[i].question + "</h2><p><em>(Click modal to reveal answer)</em></p>"
+  							// show the answer when modal is clicked
+							modal.onclick = function() {
+								document.querySelector('.modal-body').innerHTML = "<h1>" + hintdata[j].clues[i].answer + "</h1>"
+							}
+							// handling closing
+							var span = document.getElementsByClassName("close")[0];
+							span.onclick = function() {
+							    modal.style.display = "none";
+							}
+							window.onclick = function(event) {
+							    if (event.target == modal) {
+							        modal.style.display = "none";
+							    }
+							}
+  						}
+  						document.getElementById('board').appendChild(divitem) // adds tile to board
+  					}
+  				}
+  			})
   		})
 
   	</script>
